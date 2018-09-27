@@ -22,6 +22,7 @@ else
 BUILD_DIR = $(WIN_DIR)
 VULKAN = c:/VulkanSDK/1.1.82.1
 GLSLANG = glslangValidator
+CFLAGS = -I$(VULKAN)/include
 default: vulkan.exe
 endif
 endif
