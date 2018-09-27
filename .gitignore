@@ -9,6 +9,7 @@ vulkan.pdb
 #mac files
 vulkan.app
 vulkan.bin
+libMoltenVK.dylib
 
 #linux files
 vulkan
