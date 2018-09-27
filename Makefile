@@ -5,7 +5,7 @@ ifeq ($(UNAME), Darwin)
 BUILD_DIR = $(MAC_DIR)
 VULKAN=/Users/burito/Downloads/vulkansdk-macos-1.1.82.1
 GLSLANG = $(VULKAN)/macos/bin/glslangValidator
-CFLAGS = -I$(VULKAN)/MoltenVK/include/
+CFLAGS = -I$(VULKAN)/MoltenVK/include
 default: vulkan.bin
 
 else
@@ -14,6 +14,7 @@ ifeq ($(UNAME), Linux)
 BUILD_DIR = $(LIN_DIR)
 VULKAN = /home/burito/Downloads/1.1.82.1/x86_64
 GLSLANG = $(VULKAN)/bin/glslangValidator
+CFLAGS = -I$(VULKAN)/include
 default: vulkan
 
 else
@@ -26,7 +27,7 @@ endif
 endif
 
 WIN_LIBS = -L$(VULKAN)/lib -lvulkan-1 -luser32 -lwinmm -lgdi32
-LIN_LIBS = -L$(VULKAN)/lib -lxcb
+LIN_LIBS = -L$(VULKAN)/lib -lvulkan -lxcb
 MAC_LIBS = -L$(VULKAN)/MoltenVK/macOS -lMoltenVK -framework CoreVideo -framework QuartzCore -rpath . -framework Cocoa
 # replace -lxcb with -lX11 if using Xlib
 
@@ -49,8 +50,10 @@ CC = clang -g
 CFLAGS += -Ibuild
 
 $(WIN_DIR)/%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
 $(LIN_DIR)/%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
 $(MAC_DIR)/%.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
