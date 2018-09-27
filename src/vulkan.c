@@ -17,8 +17,10 @@ extern HWND hWnd;
 
 #define VK_USE_PLATFORM_MACOS_MVK
 #include <vulkan/vulkan.h>
-static const uint32_t vulkan_extention_count = 1;
-static const char * vulkan_extension_strings[1] = { VK_MVK_MACOS_SURFACE_EXTENSION_NAME };
+static const uint32_t vulkan_extention_count = 2;
+static const char * vulkan_extension_strings[2] = {
+	VK_MVK_MACOS_SURFACE_EXTENSION_NAME,
+	VK_KHR_SURFACE_EXTENSION_NAME };
 extern void* pView;
 
 #elif defined USE_LINUX_XLIB
