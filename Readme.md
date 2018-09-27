@@ -3,21 +3,47 @@ Vulkan Example
 This is a basic Vulkan Fragment Shader Window example, with the intention that it compiles from the command line on Windows, Linux and MacOS.
 So far Windows and Linux behave as intended, but MacOS, while it claims to initialise correctly, only displays a black window.
 
-Windows and Linux
-=================
-* Download the LunarG Vulkan SDK.
-* Ensure the VULKAN_PATH is correct in the Makefile
-* ```make```
+Compiling (all OS's)
+====================
+    git clone git@github.com:burito/vulkan
+    cd vulkan
+    make
 
+Build Environment
+=================
+Windows
+-------
+* Install [mingw-w64-install.exe](http://sourceforge.net/projects/mingw-w64/files/) 8.1.0-x86_64-posix-seh
+* Add its ```bin``` directory to your path
+* Install current GPU drivers
+
+Linux
+-----
+* ```apt-get install build-essential```
+* Install current GPU drivers
 
 MacOS
-=====
+-----
+* Install XCode
+
+Libraries
+=========
+
+Windows & Linux
+---------------
+Grab them from the [LunarG Vulkan SDK](https://vulkan.lunarg.com/)
+
+MacOS
+-----
+
 Check the MoltenVK Github Readme for up to date information, but as of now...
 
     git clone git@github.com:KhronosGroup/MoltenVK
     cd MoltenVK
     ./fetchDependencies
     xcodebuild -project MoltenVKPackaging.xcodeproj -scheme "MoltenVK Package (Release)" build
+
+Then grab them from that directory.
 
 
 
