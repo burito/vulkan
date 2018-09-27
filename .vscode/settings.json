@@ -11,6 +11,7 @@
 		"xiosbase": "c",
 		"log.h": "c",
 		"system_error": "c",
-		"xlocale": "c"
+		"xlocale": "c",
+		"vk_platform.h": "c"
 	}
 }

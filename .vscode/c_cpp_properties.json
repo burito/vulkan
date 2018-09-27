@@ -32,13 +32,13 @@
         {
             "name": "Win32",
             "includePath": [
-                "${workspaceFolder/**",
-                "c:/VulkanSDK/1.1.82.1"
+                "C:/VulkanSDK/1.1.82.1/Include"
             ],
-            "compilerPath": "/usr/bin/clang",
+            "compilerPath": "C:/Program Files/mingw-w64/x86_64-8.1.0-posix-seh-rt_v6-rev0/mingw64/bin/gcc.exe",
             "cStandard": "c11",
             "cppStandard": "c++17",
-            "intelliSenseMode": "clang-x64"
+            "intelliSenseMode": "gcc-x64"
+
         }
     ],
     "version": 4
