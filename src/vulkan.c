@@ -122,12 +122,39 @@ int vulkan_init(void)
 	}
 */
 
+//	vkGetPhysicalDeviceSurfaceSupportKHR(vkpd, )
+
+	uint32_t queuefamily_count = 0;
+	vkGetPhysicalDeviceQueueFamilyProperties(vkpd[desired_device], &queuefamily_count, NULL);
+	VkQueueFamilyProperties *queuefamily_properties = malloc(sizeof(VkQueueFamilyProperties) * queuefamily_count);
+	vkGetPhysicalDeviceQueueFamilyProperties(vkpd[desired_device], &queuefamily_count, queuefamily_properties);
+	int desired_queuefamily = -1;
+	for(int i=0; i<queuefamily_count; i++)
+	{
+		log_info("queuefamily[%d].flags = %d", i,
+			queuefamily_properties[i].queueFlags);
+		vulkan_queueflags(queuefamily_properties[i].queueFlags);
+
+		VkQueueFlags wanted = 
+			VK_QUEUE_GRAPHICS_BIT |
+			VK_QUEUE_COMPUTE_BIT |
+			VK_QUEUE_TRANSFER_BIT;
+
+		if( queuefamily_properties[i].queueFlags & wanted )
+			desired_queuefamily = i;
+	}
+	if(desired_queuefamily == -1)
+	{
+		log_fatal("Could not find a desired QueueFamily");
+		return 1;
+	}
+
 	float queue_priority = 1.0f;
 	VkDeviceQueueCreateInfo vkqci = {
 		VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,	// VkStructureType             sType;
 		NULL,						// const void*                 pNext;
 		0,						// VkDeviceQueueCreateFlags    flags;
-		0,						// uint32_t                    queueFamilyIndex;
+		(uint32_t)desired_queuefamily,			// uint32_t                    queueFamilyIndex;
 		1,						// uint32_t                    queueCount;
 		&queue_priority					// const float*                pQueuePriorities;
 	};
