@@ -51,6 +51,10 @@ Credits
 * lib/include/MoltenVK/* - Khronos Group
 	* https://github.com/KhronosGroup/MoltenVK/
 	* 4c5f7b8b0deeb11b8f72d1af6ffef882305170c3
+* lib/win/* - LunarG Vulkan SDK for Windows
+	* 1.1.82.1
+* lib/lin/* - LunarG Vulkan SDK for Linux
+	* 1.1.82.1
 * src/macos.m
 	* based on the work of Dmytro Ivanov
 	* https://github.com/jimon/osx_app_in_plain_c
