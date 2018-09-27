@@ -96,7 +96,7 @@ int APIENTRY WinMain(HINSTANCE hCurrentInst, HINSTANCE hPrev,
 		}
 		long time_now = timeGetTime();
 
-		vulkan_loop( (time_now - last_time) * 0.0001 );
+		vulkan_loop( (time_now - last_time) * 0.001 );
 //		SwapBuffers(hDC);
 		RedrawWindow(hWnd, NULL, NULL, RDW_INTERNALPAINT);
 	}

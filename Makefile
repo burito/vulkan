@@ -20,7 +20,6 @@ default: vulkan
 else
 # Windows
 BUILD_DIR = $(WIN_DIR)
-# VULKAN = c:/VulkanSDK/1.1.82.1
 GLSLANG = lib/win/glslangValidator.exe
 CFLAGS = -Ilib/include
 CC = gcc -g
@@ -28,7 +27,7 @@ default: vulkan.exe
 endif
 endif
 
-WIN_LIBS = $(VULKAN)/Source/lib/vulkan-1.dll -luser32 -lwinmm -lgdi32
+WIN_LIBS = c:/Windows/system32/vulkan-1.dll -luser32 -lwinmm -lgdi32
 LIN_LIBS = -Llib/lin -lvulkan -lxcb
 MAC_LIBS = -Llib/mac -lMoltenVK -framework CoreVideo -framework QuartzCore -rpath . -framework Cocoa
 # replace -lxcb with -lX11 if using Xlib
