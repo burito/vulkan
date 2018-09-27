@@ -3,7 +3,6 @@ UNAME := $(shell uname)
 ifeq ($(UNAME), Darwin)
 # MacOS
 BUILD_DIR = $(MAC_DIR)
-# VULKAN = /Users/burito/Downloads/vulkansdk-macos-1.1.82.1
 GLSLANG = lib/mac/glslangValidator
 CFLAGS = -Ilib/include
 CC = clang -g
@@ -13,8 +12,7 @@ else
 ifeq ($(UNAME), Linux)
 # Linux
 BUILD_DIR = $(LIN_DIR)
-# VULKAN = /home/burito/Downloads/1.1.82.1/x86_64
-GLSLANG = $(VULKAN)/bin/glslangValidator
+GLSLANG = lib/lin/glslangValidator
 CFLAGS = -Ilib/include
 CC = clang -g
 default: vulkan

@@ -5,3 +5,10 @@ build
 vulkan.exe
 vulkan.ilk
 vulkan.pdb
+
+#mac files
+vulkan.app
+vulkan.bin
+
+#linux files
+vulkan
