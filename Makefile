@@ -3,9 +3,9 @@ UNAME := $(shell uname)
 ifeq ($(UNAME), Darwin)
 # MacOS
 BUILD_DIR = $(MAC_DIR)
-VULKAN = /Users/burito/Downloads/vulkansdk-macos-1.1.82.1
-GLSLANG = $(VULKAN)/macos/bin/glslangValidator
-CFLAGS = -I$(VULKAN)/MoltenVK/include
+# VULKAN = /Users/burito/Downloads/vulkansdk-macos-1.1.82.1
+GLSLANG = lib/mac/glslangValidator
+CFLAGS = -Ilib/include
 CC = clang -g
 default: vulkan.bin
 
@@ -13,26 +13,26 @@ else
 ifeq ($(UNAME), Linux)
 # Linux
 BUILD_DIR = $(LIN_DIR)
-VULKAN = /home/burito/Downloads/1.1.82.1/x86_64
+# VULKAN = /home/burito/Downloads/1.1.82.1/x86_64
 GLSLANG = $(VULKAN)/bin/glslangValidator
-CFLAGS = -I$(VULKAN)/include
+CFLAGS = -Ilib/include
 CC = clang -g
 default: vulkan
 
 else
 # Windows
 BUILD_DIR = $(WIN_DIR)
-VULKAN = c:/VulkanSDK/1.1.82.1
-GLSLANG = glslangValidator
-CFLAGS = -I$(VULKAN)/include
+# VULKAN = c:/VulkanSDK/1.1.82.1
+GLSLANG = lib/win/glslangValidator.exe
+CFLAGS = -Ilib/include
 CC = gcc -g
 default: vulkan.exe
 endif
 endif
 
 WIN_LIBS = $(VULKAN)/Source/lib/vulkan-1.dll -luser32 -lwinmm -lgdi32
-LIN_LIBS = -L$(VULKAN)/lib -lvulkan -lxcb
-MAC_LIBS = -L$(VULKAN)/MoltenVK/macOS -lMoltenVK -framework CoreVideo -framework QuartzCore -rpath . -framework Cocoa
+LIN_LIBS = -Llib/lin -lvulkan -lxcb
+MAC_LIBS = -Llib/mac -lMoltenVK -framework CoreVideo -framework QuartzCore -rpath . -framework Cocoa
 # replace -lxcb with -lX11 if using Xlib
 
 WIN_DIR = build/win
@@ -65,7 +65,8 @@ $(MAC_DIR)/%.o: %.c
 $(MAC_DIR)/macos.o: macos.m
 	$(CC) $(CFLAGS) -c $< -o $@
 
-
+libMoltenVK.dylib: lib/mac/libMoltenVK.dylib
+	cp lib/mac/libMoltenVK.dylib .
 
 vulkan.exe: $(WIN_OBJS)
 	$(CC) $^ $(WIN_LIBS) -o $@
@@ -73,7 +74,7 @@ vulkan.exe: $(WIN_OBJS)
 vulkan: $(LIN_OBJS)
 	$(CC) $(CFLAGS) $(LIN_LIBS) $^ -o $@
 
-vulkan.bin: $(MAC_OBJS)
+vulkan.bin: $(MAC_OBJS) libMoltenVK.dylib
 	$(CC) $(CFLAGS) $(MAC_LIBS) $^ -o $@
 
 
@@ -99,6 +100,6 @@ build/frag_spv.h : build/frag.spv
 	xxd -i $< > $@
 
 clean:
-	@rm -rf build
+	@rm -rf build vulkan vulkan.exe vulkan.bin vulkan.app libMoltenVK.dylib 
 
 $(shell	mkdir -p $(BUILD_DIR))

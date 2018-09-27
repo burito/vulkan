@@ -4,9 +4,8 @@
             "name": "Mac",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/Users/burito/code/MoltenVK/MoltenVK/include",
-                "/Users/burito/code/MoltenVK/External/Vulkan-Headers/include"
-            ],
+                "${workspaceFolder}/lib/include"
+           ],
             "defines": [],
             "macFrameworkPath": [
                 "/System/Library/Frameworks",
@@ -21,7 +20,7 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/home/burito/Downloads/1.1.82.1/x86_64/include"
+                "${workspaceFolder}/lib/include"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/clang",
@@ -32,7 +31,8 @@
         {
             "name": "Win32",
             "includePath": [
-                "C:/VulkanSDK/1.1.82.1/Include"
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/lib/include"
             ],
             "compilerPath": "C:/Program Files/mingw-w64/x86_64-8.1.0-posix-seh-rt_v6-rev0/mingw64/bin/gcc.exe",
             "cStandard": "c11",
