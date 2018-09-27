@@ -1,3 +1,7 @@
 .DS_Store
 build
 
+#win32 files
+vulkan.exe
+vulkan.ilk
+vulkan.pdb
