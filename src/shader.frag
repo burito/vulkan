@@ -9,5 +9,5 @@ layout (binding = 0) uniform UBO
 
 
 void main() {
-	ColourOut = vec4( ubo.time, 1.0, 0.0, 1.0 );
+	ColourOut = vec4( 0.0, mod(ubo.time, 1.0), 1.0, 1.0 );
 }
