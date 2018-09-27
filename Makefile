@@ -3,7 +3,7 @@ UNAME := $(shell uname)
 ifeq ($(UNAME), Darwin)
 # MacOS
 BUILD_DIR = $(MAC_DIR)
-VULKAN=/Users/burito/Downloads/vulkansdk-macos-1.1.82.1
+VULKAN = /Users/burito/Downloads/vulkansdk-macos-1.1.82.1
 GLSLANG = $(VULKAN)/macos/bin/glslangValidator
 CFLAGS = -I$(VULKAN)/MoltenVK/include
 default: vulkan.bin

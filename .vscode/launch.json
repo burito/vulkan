@@ -6,15 +6,26 @@
 	"configurations": [
 		{
 			"name": "(lldb) Launch",
+			"linux": {
+				"program": "${workspaceFolder}/vulkan",
+				"miDebuggerPath": "/usr/bin/gdb",
+				"MIMode": "gdb",
+			},
+			"windows": {
+				"program": "${workspaceFolder}/vulkan.exe",
+			},
+			"osx":{
+				"program": "${workspaceFolder}/vulkan.bin",
+				"MIMode": "lldb",
+			},
 			"type": "cppdbg",
 			"request": "launch",
-			"program": "${workspaceFolder}/tiny",
+
 			"args": [],
 			"stopAtEntry": false,
 			"cwd": "${workspaceFolder}",
 			"environment": [],
 			"externalConsole": true,
-			"MIMode": "lldb",
 			"setupCommands": [
 				{
 					"description": "Enable pretty-printing for gdb",
