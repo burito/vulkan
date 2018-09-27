@@ -230,6 +230,13 @@ int vulkan_init(void)
 		log_warning("vkCreateMacOSSurfaceMVK = %s", vulkan_result(result));
 	}
 #endif
+	VkBool32 present_supported = VK_FALSE;
+	result = vkGetPhysicalDeviceSurfaceSupportKHR(vkpd[desired_device], desired_queuefamily, vks, &present_supported);
+	if( result != VK_SUCCESS )
+	{
+		log_warning("vkGetPhysicalDeviceSurfaceSupportKHR = %s", vulkan_result(result));
+	}
+	log_info("vkGetPhysicalDeviceSurfaceSupportKHR(%d) = %s", desired_queuefamily, present_supported?"VK_TRUE":"VK_FALSE");
 
 	uint32_t surface_format_count = 0;
 	result = vkGetPhysicalDeviceSurfaceFormatsKHR(vkpd[desired_device], vks, &surface_format_count, NULL);
@@ -271,7 +278,7 @@ int vulkan_init(void)
 		return 1;
 	}
 
-	vkGetDeviceQueue(device, 0, 0, &queue);
+	vkGetDeviceQueue(device, desired_queuefamily, 0, &queue);
 	log_debug("vkGetDeviceQueue");
 
 	VkSemaphoreCreateInfo vksemcrinf = {
