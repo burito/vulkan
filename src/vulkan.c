@@ -6,8 +6,10 @@
 
 #define VK_USE_PLATFORM_WIN32_KHR
 #include <vulkan/vulkan.h>
-static const uint32_t vulkan_extention_count = 1;
-static const char * vulkan_extension_strings[1] = { VK_KHR_WIN32_SURFACE_EXTENSION_NAME };
+static const uint32_t vulkan_extention_count = 2;
+static const char * vulkan_extension_strings[2] = {
+	VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
+	VK_KHR_SURFACE_EXTENSION_NAME };
 extern HINSTANCE hInst;
 extern HWND hWnd;
 
@@ -23,8 +25,10 @@ extern void* pView;
 
 #define VK_USE_PLATFORM_XLIB_KHR
 #include <vulkan/vulkan.h>
-static const uint32_t vulkan_extention_count = 1;
-static const char * vulkan_extension_strings[1] = { VK_KHR_XLIB_SURFACE_EXTENSION_NAME };
+static const uint32_t vulkan_extention_count = 2;
+static const char * vulkan_extension_strings[2] = {
+	VK_KHR_XLIB_SURFACE_EXTENSION_NAME,
+	VK_KHR_SURFACE_EXTENSION_NAME };
 extern Display* display;
 extern Window window;
 
@@ -91,15 +95,28 @@ int vulkan_init(void)
 	{
 		log_warning("vkCreateInstance = %d", result);
 	}
-	unsigned int device_count = 1;
-	VkPhysicalDevice vkpd;
-	// vkEnumeratePhysicalDevices(vki, &count, 0);
-	result = vkEnumeratePhysicalDevices(vki, &device_count, &vkpd);
+	unsigned int device_count = 0;
+	result = vkEnumeratePhysicalDevices(vki, &device_count, NULL);
 	if( result != VK_SUCCESS )
 	{
-		log_warning("vkEnumeratePhysicalDevices = %d", result);
+		log_warning("vkEnumeratePhysicalDevices1 = %d", result);
+	}
+	log_info("vkEnumeratePhysicalDevices = %d", device_count);
+	VkPhysicalDevice *vkpd;
+	vkpd = malloc(sizeof(VkPhysicalDevice) * device_count);
+	result = vkEnumeratePhysicalDevices(vki, &device_count, vkpd);
+	if( result != VK_SUCCESS )
+	{
+		log_warning("vkEnumeratePhysicalDevices2 = %d", result);
 	}
 
+	int desired_device = 0;
+/*
+	for(int i=0; i<device_count; i++)
+	{
+
+	}
+*/
 
 	float queue_priority = 1.0f;
 	VkDeviceQueueCreateInfo vkqci = {
@@ -124,7 +141,7 @@ int vulkan_init(void)
 		vk_dext_str,				// const char* const*                 ppEnabledExtensionNames;
 		0					// const VkPhysicalDeviceFeatures*    pEnabledFeatures;
 	};
-	result = vkCreateDevice(vkpd, &vkdci, 0, &device);
+	result = vkCreateDevice(vkpd[desired_device], &vkdci, 0, &device);
 	if( result != VK_SUCCESS )
 	{
 		log_warning("vkCreateDevice = %d", result);
@@ -184,7 +201,7 @@ int vulkan_init(void)
 #endif
 
 	uint32_t surface_format_count = 0;
-	result = vkGetPhysicalDeviceSurfaceFormatsKHR(vkpd, vks, &surface_format_count, NULL);
+	result = vkGetPhysicalDeviceSurfaceFormatsKHR(vkpd[desired_device], vks, &surface_format_count, NULL);
 	if( result != VK_SUCCESS )
 	{
 		log_warning("vkGetPhysicalDeviceSurfaceFormatsKHR = %d", result);
@@ -197,7 +214,7 @@ int vulkan_init(void)
 		log_fatal("malloc(surface_formats)");
 		return 1;
 	}
-	result = vkGetPhysicalDeviceSurfaceFormatsKHR(vkpd, vks, &surface_format_count, surface_formats);
+	result = vkGetPhysicalDeviceSurfaceFormatsKHR(vkpd[desired_device], vks, &surface_format_count, surface_formats);
 	if( result != VK_SUCCESS )
 	{
 		log_warning("vkGetPhysicalDeviceSurfaceFormatsKHR = %d", result);
@@ -466,7 +483,7 @@ int vulkan_init(void)
 	VkMemoryRequirements vk_memreq;
 	vkGetBufferMemoryRequirements(device, ubo_buffer_client, &vk_memreq);
 	VkPhysicalDeviceMemoryProperties vkpdmp;
-	vkGetPhysicalDeviceMemoryProperties(vkpd, &vkpdmp);
+	vkGetPhysicalDeviceMemoryProperties(vkpd[desired_device], &vkpdmp);
 	for(int i=0; i<vkpdmp.memoryTypeCount; i++)
 	{
 		if( vk_memreq.memoryTypeBits & (1<<i) )
