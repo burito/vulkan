@@ -4,38 +4,34 @@ This is a basic Vulkan Fragment Shader Window example, with the intention that i
 So far Windows and Linux behave as intended, but MacOS, while it claims to initialise correctly, only displays a black window.
 
 Compiling (all OS's)
-====================
+--------------------
     git clone git@github.com:burito/vulkan
     cd vulkan
     make
 
 Build Environment
-=================
-Windows
--------
+-----------------
+### Windows
+
 * Install [mingw-w64-install.exe](http://sourceforge.net/projects/mingw-w64/files/) 8.1.0-x86_64-posix-seh
 * Add its ```bin``` directory to your path
 * Install current GPU drivers
 
-Linux
------
+### Linux
 * ```apt-get install build-essential```
 * Install current GPU drivers
 
-MacOS
------
+### MacOS
+
 * Install XCode
 
 Libraries
-=========
+---------
 
-Windows & Linux
----------------
+### Windows & Linux
 Grab them from the [LunarG Vulkan SDK](https://vulkan.lunarg.com/)
 
-MacOS
------
-
+### MacOS
 Check the MoltenVK Github Readme for up to date information, but as of now...
 
     git clone git@github.com:KhronosGroup/MoltenVK
