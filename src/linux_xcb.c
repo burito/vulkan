@@ -3,7 +3,7 @@
 
 #include "log.h"
 int vulkan_init(void);
-void vulkan_loop(float current_time);
+int vulkan_loop(float current_time);
 
 #define VIDX 1280
 #define VIDY 800
@@ -58,6 +58,9 @@ int main(int argc, char *argv[])
 		{
 			switch ( event->response_type & 0x7f) {
 			case XCB_KEY_RELEASE:
+			case XCB_DESTROY_NOTIFY:
+			case XCB_DESTROY_WINDOW:
+			case XCB_KILL_CLIENT:
 				quit = 1;
 			default:
 				break;	
@@ -67,8 +70,11 @@ int main(int argc, char *argv[])
 		}
 		/* main loop is here! */
 
+		int ret = 0;
 		long time_now = timeGetTime();
-		vulkan_loop( (time_now - last_time) * 0.0001 );
+		ret = vulkan_loop( (time_now - last_time) * 0.001 );
+
+		if(ret)quit = 1;
 		/* main loop ends here! */
 	}
 	return 0;

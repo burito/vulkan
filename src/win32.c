@@ -7,7 +7,7 @@
 #define VIDY 800
 
 int vulkan_init(void);
-void vulkan_loop(float current_time);
+int vulkan_loop(float current_time);
 
 HINSTANCE hInst;
 HWND hWnd;
@@ -96,7 +96,8 @@ int APIENTRY WinMain(HINSTANCE hCurrentInst, HINSTANCE hPrev,
 		}
 		long time_now = timeGetTime();
 
-		vulkan_loop( (time_now - last_time) * 0.001 );
+		int ret = vulkan_loop( (time_now - last_time) * 0.001 );
+		if(ret)killme = 1;
 //		SwapBuffers(hDC);
 		RedrawWindow(hWnd, NULL, NULL, RDW_INTERNALPAINT);
 	}

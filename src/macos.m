@@ -7,7 +7,7 @@
 #include "log.h"
 
 int vulkan_init(void);
-void vulkan_loop(float time);
+int vulkan_loop(float time);
 
 NSWindow *window;
 void * pView = NULL;

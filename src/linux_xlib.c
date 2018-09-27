@@ -3,7 +3,7 @@
 
 #include "log.h"
 int vulkan_init(void);
-void vulkan_loop(float current_time);
+int vulkan_loop(float current_time);
 
 #define VIDX 1280
 #define VIDY 800
