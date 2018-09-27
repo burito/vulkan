@@ -73,14 +73,9 @@ int APIENTRY WinMain(HINSTANCE hCurrentInst, HINSTANCE hPrev,
 		log_fatal("CreateWindowEx()");
 		return 2;
 	}
-//	ShowWindow(hWnd, nCmdShow);
-//	UpdateWindow(hWnd);
 
-
-//	HDC hDC = GetDC(hWnd);
-
-
-	vulkan_init();
+	if( vulkan_init() )
+		killme = 1;
 
 	long last_time = timeGetTime();
 
