@@ -64,7 +64,7 @@ static CVReturn DisplayLinkCallback(CVDisplayLinkRef displayLink,
 {
 //	log_debug("MyViewController:DisplayLinkCallback");
 //	if(we_have_vulkan)
-	vulkan_loop( (timeGetTime() - start_time) * 0.0001 );
+	vulkan_loop( (timeGetTime() - start_time) * 0.001 );
 	return kCVReturnSuccess;
 }
 
@@ -198,7 +198,7 @@ int main(int argc, const char * argv[])
 //	[window contentViewController] = viewcontroller;
 
 
-	id window = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, VIDX, VIDY)
+	id window = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, VIDX*0.5, VIDY*0.5)
 		styleMask: NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable | NSWindowStyleMaskResizable backing:NSBackingStoreBuffered defer:NO];
 	[window setReleasedWhenClosed:NO];
 	WindowDelegate * wdg = [[WindowDelegate alloc] init];

@@ -891,6 +891,7 @@ int vulkan_init(void)
 		result = vkBeginCommandBuffer(command_buffers[i],&vk_cmdbegin);
 		if( result != VK_SUCCESS ) { log_warning("vkBeginCommandBuffer = %s", vulkan_result(result)); }
 		
+		vkCmdCopyBuffer( command_buffers[i], ubo_buffer_client, ubo_buffer_host, 1, &buffer_copy[0]);
 
 		vkCmdPipelineBarrier(command_buffers[i],
 			VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
@@ -899,12 +900,12 @@ int vulkan_init(void)
 
 		vkCmdBeginRenderPass( command_buffers[i], &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
 
-		vkCmdCopyBuffer( command_buffers[i], ubo_buffer_client, ubo_buffer_host, 1, &buffer_copy[0]);
-
+		vkCmdBindPipeline( command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, vkpipe);
 		vkCmdBindDescriptorSets( command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS,
 		pipeline_layout, 0, 1, &desc_set, 0, NULL);
 
-		vkCmdBindPipeline( command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, vkpipe);
+
+
 
 		vkCmdDraw( command_buffers[i], 4, 1, 0, 0 );
 
