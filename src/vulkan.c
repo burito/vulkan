@@ -931,8 +931,13 @@ int vulkan_loop(float current_time)
 	if(result != VK_SUCCESS)
 	{
 		log_warning("vkAcquireNextImageKHR = %s", vulkan_result(result));
-		if(result == VK_ERROR_OUT_OF_DATE_KHR)
+		switch(result) {
+		case VK_ERROR_OUT_OF_DATE_KHR:
+		case VK_ERROR_DEVICE_LOST:
 			return 1;
+		default:
+			break;
+		}
 	}
 	float * data;
 	result = vkMapMemory(device, ubo_client, 0, sizeof(float), 0, (void**)&data);
