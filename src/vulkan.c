@@ -280,8 +280,7 @@ int vulkan_init(void)
 		return 1;
 	}
 
-	log_info("desired_queuefamily = %d", desired_queuefamily);
-	vkGetDeviceQueue(device, 0, 0, &queue);
+	vkGetDeviceQueue(device, desired_queuefamily, 0, &queue);
 	log_debug("vkGetDeviceQueue");
 
 	VkSemaphoreCreateInfo vksemcrinf = {
