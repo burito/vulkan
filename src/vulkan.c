@@ -140,8 +140,10 @@ int vulkan_init(void)
 			VK_QUEUE_COMPUTE_BIT |
 			VK_QUEUE_TRANSFER_BIT;
 
-		if( queuefamily_properties[i].queueFlags & wanted )
+		if( (queuefamily_properties[i].queueFlags & wanted) == wanted )
+		{
 			desired_queuefamily = i;
+		}
 	}
 	if(desired_queuefamily == UINT32_MAX)
 	{
@@ -278,7 +280,8 @@ int vulkan_init(void)
 		return 1;
 	}
 
-	vkGetDeviceQueue(device, desired_queuefamily, 0, &queue);
+	log_info("desired_queuefamily = %d", desired_queuefamily);
+	vkGetDeviceQueue(device, 0, 0, &queue);
 	log_debug("vkGetDeviceQueue");
 
 	VkSemaphoreCreateInfo vksemcrinf = {
