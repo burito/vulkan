@@ -41,6 +41,8 @@ xcb_window_t window;
 
 int main(int argc, char *argv[])
 {
+	log_init();
+	log_debug("main()");
 	xcb_screen_t *screen;
 	xcb_intern_atom_reply_t *atom_wm_delete_window;
 
@@ -64,7 +66,17 @@ int main(int argc, char *argv[])
 	xcb_create_window(xcb, XCB_COPY_FROM_PARENT, window, screen->root, 0, 0, VIDX, VIDY, 0,
 	XCB_WINDOW_CLASS_INPUT_OUTPUT, screen->root_visual, value_mask, value_list);
 
+
+	xcb_intern_atom_cookie_t cookie = xcb_intern_atom(xcb, 1, 12, "WM_PROTOCOLS");
+	xcb_intern_atom_reply_t* reply = xcb_intern_atom_reply(xcb, cookie, 0);
+
+	xcb_intern_atom_cookie_t cookie2 = xcb_intern_atom(xcb, 0, 16, "WM_DELETE_WINDOW");
+	xcb_intern_atom_reply_t* reply2 = xcb_intern_atom_reply(xcb, cookie2, 0);
+
+	xcb_change_property(xcb, XCB_PROP_MODE_REPLACE, window, (*reply).atom, 4, 32, 1, &(*reply2).atom);
+
 	xcb_map_window(xcb, window);
+	xcb_flush(xcb);
 
 	if( vulkan_init() )
 	{
@@ -73,19 +85,32 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	xcb_flush(xcb);
 	long last_time = timeGetTime();
-	int quit = 0;
-	while(!quit) {
+	int killme = 0;
+	while(!killme) {
 		xcb_generic_event_t *event = xcb_poll_for_event(xcb);
 		while(event)
 		{
 			switch ( event->response_type & 0x7f) {
 			case XCB_KEY_RELEASE:
+				log_debug("key release");
+				killme = 1;
+				break;
 			case XCB_DESTROY_NOTIFY:
 			case XCB_DESTROY_WINDOW:
 			case XCB_KILL_CLIENT:
-				quit = 1;
+				log_debug("kill client");
+				killme = 1;
+				break;
+			case XCB_CLIENT_MESSAGE:
+				log_debug("client message");
+				if( ((xcb_client_message_event_t*)event)->data.data32[0] ==
+				reply2->atom )
+				{
+					log_debug("kill");
+					killme = 1;
+				}
+				break;
 			default:
 				break;	
 			}
@@ -98,9 +123,10 @@ int main(int argc, char *argv[])
 		long time_now = timeGetTime();
 		ret = vulkan_loop( (time_now - last_time) * 0.001 );
 
-		if(ret)quit = 1;
+		if(ret)killme = 1;
 		/* main loop ends here! */
 	}
 	xcb_disconnect(xcb);
+	log_debug("program exit ok");
 	return 0;
 }
