@@ -9,6 +9,10 @@
 int vulkan_init(void);
 int vulkan_loop(float time);
 
+int killme = 0;
+long start_time = 0;
+static CVDisplayLinkRef _displayLink;
+
 NSWindow *window;
 void * pView = NULL;
 NSView * window_view = NULL;
@@ -26,33 +30,23 @@ static long timeGetTime( void ) // Thanks Inigo Quilez!
 }
 
 
-long start_time = 0;
-
-static CVDisplayLinkRef _displayLink;
 
 
 //
 // NSView
 //
 
-@interface MyView : NSView
+@interface View : NSView
 @end
 
-@implementation MyView
+@implementation View
 
 -(id) init
 {
-	log_debug("MyView:init");
-	window_view = self;
-//	vulkan_init();
-
+	log_debug("View:init");
 	CVDisplayLinkCreateWithActiveCGDisplays(&_displayLink);
 	CVDisplayLinkSetOutputCallback(_displayLink, &DisplayLinkCallback, NULL);
-//	CVDisplayLinkSetOutputCallback(_displayLink, &DisplayLinkCallback, void* ptr);
-//	CVDisplayLinkStart(_displayLink);
 	return [super init];
-
-
 }
 
 static CVReturn DisplayLinkCallback(CVDisplayLinkRef displayLink,
@@ -62,8 +56,7 @@ static CVReturn DisplayLinkCallback(CVDisplayLinkRef displayLink,
 					CVOptionFlags *flagsOut,
 					void *target)
 {
-//	log_debug("MyViewController:DisplayLinkCallback");
-//	if(we_have_vulkan)
+//	log_debug("View:DisplayLinkCallback");
 	vulkan_loop( (timeGetTime() - start_time) * 0.001 );
 	return kCVReturnSuccess;
 }
@@ -72,32 +65,20 @@ static CVReturn DisplayLinkCallback(CVDisplayLinkRef displayLink,
 
 -(void) dealloc
 {
-	log_debug("MyViewController:dealloc");
+	log_debug("View:dealloc");
 	// main_shutdown();
 	CVDisplayLinkRelease(_displayLink);
 	[super dealloc];
 }
 
 
--(BOOL) wantsUpdateLayer
-{
-//	log_debug("MyView:wantsUpdateLayer");
-	return YES;
-}
+-(BOOL) wantsUpdateLayer { return YES; }
 
-
-+(Class) layerClass
-{
-//	log_debug("MyView:layerClass");
-//	CAMetalLater * metal_layer = [CAMetalLayer class]
-//	pView = metal_layer;
-	return [CAMetalLayer class];
-}
++(Class) layerClass { return [CAMetalLayer class]; }
 
 -(CALayer*) makeBackingLayer
 {
-//	log_debug("MyView:makeBackingLayer");
-//	return [self.class.layerClass layer];
+//	log_debug("View:makeBackingLayer");
 	CALayer *layer = [self.class.layerClass layer];
 	CGSize viewScale = [self convertSizeToBacking: CGSizeMake(1.0, 1.0)];
 	layer.contentsScale = MIN(viewScale.width, viewScale.height);
@@ -123,8 +104,6 @@ static CVReturn DisplayLinkCallback(CVDisplayLinkRef displayLink,
 	NSRect contentSize = NSMakeRect(100.0, 400.0, 640.0, 360.0);
 	NSUInteger windowStyleMask = NSWindowStyleMaskTitled | NSWindowStyleMaskResizable | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable;
 	window = [[NSWindow alloc] initWithContentRect:contentSize styleMask:windowStyleMask backing:NSBackingStoreBuffered defer:YES];
-//	window.backgroundColor = [NSColor whiteColor];
-	window.title = @"Kittens";
 
 	[window setCollectionBehavior:(NSWindowCollectionBehaviorFullScreenPrimary)];
 	return [super init];
@@ -134,11 +113,8 @@ static CVReturn DisplayLinkCallback(CVDisplayLinkRef displayLink,
 {
 	log_debug("AppDelegate:applicationDidFinishLaunching");
 	// init
-//	my_View.wantsLayer = YES;
-	vulkan_init();
 	start_time = timeGetTime();
 	CVDisplayLinkStart(_displayLink);
-	
 	log_debug("no really, we did finish launching");
 }
 
@@ -146,17 +122,10 @@ static CVReturn DisplayLinkCallback(CVDisplayLinkRef displayLink,
 {
 	log_debug("AppDelegate:applicationWillTerminate");
 	// shutdown
-
 }
 
-- (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication *)sender
-{
-	return YES;
-}
+- (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication *)x { return YES; }
 @end
-
-
-bool terminated = false;
 
 
 @interface WindowDelegate : NSObject<NSWindowDelegate>
@@ -165,7 +134,7 @@ bool terminated = false;
 @implementation WindowDelegate
 -(void)windowWillClose:(NSNotification*)aNotification
 {
-	terminated = true;
+	killme = 1;
 }
 @end
 
@@ -192,11 +161,6 @@ int main(int argc, const char * argv[])
 	[appMenu addItem:quitMenuItem];
 	[appMenuItem setSubmenu:appMenu];
 
-//	id window = [[NSWindow alloc] init contentViewController:viewcontroller];
-
-//	MyViewController *viewcontroller = [[MyViewController alloc] init];
-//	[window contentViewController] = viewcontroller;
-
 
 	id window = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, VIDX*0.5, VIDY*0.5)
 		styleMask: NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable | NSWindowStyleMaskResizable backing:NSBackingStoreBuffered defer:NO];
@@ -216,19 +180,17 @@ int main(int argc, const char * argv[])
 //	[NSApp activateIgnoringOtherApps:YES];
 
 
-	MyView *view = [[MyView alloc] init];
+	NSView *view = [[View alloc] init];
 	[window setContentView:view];
 	log_info("we are here");
 	view.wantsLayer = YES;
-	pView = [window_view layer];
+	pView = [view layer];
 
-	log_warning("we have a layer = %s", [[[window_view layer] description] cStringUsingEncoding:typeUTF8Text]);
-//	vulkan_init();
-	we_have_vulkan = 1;
+	vulkan_init();
 
 	// main loop
 	float time = 0.0;
-	while(!terminated)
+	while(!killme)
 	{
 		NSEvent * event = [NSApp nextEventMatchingMask:NSEventMaskAny untilDate:[NSDate distantPast] inMode:NSDefaultRunLoopMode dequeue:YES];
 		if(event)
@@ -236,7 +198,7 @@ int main(int argc, const char * argv[])
 			NSEventType eventType = [event type];
 			switch(eventType) {
 			case NSEventTypeKeyDown:
-				terminated = 1;
+				killme = 1;
 				break;
 			default:
 				break;
@@ -245,12 +207,7 @@ int main(int argc, const char * argv[])
 			[NSApp updateWindows];
 		}
 
-//		NSRect rect = [contentView frame];
-//		rect = [contentView convertRectToBacking:rect];
-
 		// opengl draw commands
-//		time += 0.00001;
-//		vulkan_loop(time);
 	}
 	log_warning("view layer = %p", [window_view layer]);
 
