@@ -66,9 +66,13 @@ int main(int argc, char *argv[])
 
 	xcb_map_window(xcb, window);
 
-	/* Vulkan Initialisation is here! */
-	vulkan_init();
-	/* Vulkan Initialisation ends here! */
+	if( vulkan_init() )
+	{
+		log_fatal("Vulkan Initialisation failed");
+		xcb_disconnect(xcb);
+		return 1;
+	}
+
 	xcb_flush(xcb);
 	long last_time = timeGetTime();
 	int quit = 0;
@@ -97,5 +101,6 @@ int main(int argc, char *argv[])
 		if(ret)quit = 1;
 		/* main loop ends here! */
 	}
+	xcb_disconnect(xcb);
 	return 0;
 }
