@@ -3,8 +3,8 @@ UNAME := $(shell uname)
 ifeq ($(UNAME), Darwin)
 # MacOS
 BUILD_DIR = $(MAC_DIR)
-GLSLANG = lib/mac/glslangValidator
-CFLAGS = -Ilib/include
+GLSLANG = deps/mac/glslangValidator
+CFLAGS = -Ideps/include
 CC = clang -g
 default: vulkan.bin
 
@@ -12,24 +12,24 @@ else
 ifeq ($(UNAME), Linux)
 # Linux
 BUILD_DIR = $(LIN_DIR)
-GLSLANG = lib/lin/glslangValidator
-CFLAGS = -Ilib/include
+GLSLANG = deps/lin/glslangValidator
+CFLAGS = -Ideps/include
 CC = clang -g
 default: vulkan
 
 else
 # Windows
 BUILD_DIR = $(WIN_DIR)
-GLSLANG = lib/win/glslangValidator.exe
-CFLAGS = -Ilib/include
+GLSLANG = deps/win/glslangValidator.exe
+CFLAGS = -Ideps/include
 CC = gcc -g
 default: vulkan.exe
 endif
 endif
 
 WIN_LIBS = c:/Windows/system32/vulkan-1.dll -luser32 -lwinmm -lgdi32
-LIN_LIBS = -Llib/lin -lvulkan -lxcb
-MAC_LIBS = -Llib/mac -lMoltenVK -framework CoreVideo -framework QuartzCore -rpath . -framework Cocoa
+LIN_LIBS = -Ldeps/lin -lvulkan -lxcb
+MAC_LIBS = -Ldeps/mac -lMoltenVK -framework CoreVideo -framework QuartzCore -rpath . -framework Cocoa
 # replace -lxcb with -lX11 if using Xlib
 
 WIN_DIR = build/win
@@ -62,8 +62,8 @@ $(MAC_DIR)/%.o: %.c
 $(MAC_DIR)/macos.o: macos.m
 	$(CC) $(CFLAGS) -c $< -o $@
 
-libMoltenVK.dylib: lib/mac/libMoltenVK.dylib
-	cp lib/mac/libMoltenVK.dylib .
+libMoltenVK.dylib: deps/mac/libMoltenVK.dylib
+	cp deps/mac/libMoltenVK.dylib .
 
 vulkan.exe: $(WIN_OBJS)
 	$(CC) $^ $(WIN_LIBS) -o $@
