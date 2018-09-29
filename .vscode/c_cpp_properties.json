@@ -4,7 +4,7 @@
             "name": "Mac",
             "includePath": [
                 "${workspaceFolder}/**",
-                "${workspaceFolder}/lib/include"
+                "${workspaceFolder}/deps/include"
            ],
             "defines": [],
             "macFrameworkPath": [
@@ -20,7 +20,7 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "${workspaceFolder}/lib/include"
+                "${workspaceFolder}/deps/include"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/clang",
@@ -32,7 +32,7 @@
             "name": "Win32",
             "includePath": [
                 "${workspaceFolder}/**",
-                "${workspaceFolder}/lib/include"
+                "${workspaceFolder}/deps/include"
             ],
             "compilerPath": "C:/Program Files/mingw-w64/x86_64-8.1.0-posix-seh-rt_v6-rev0/mingw64/bin/gcc.exe",
             "cStandard": "c11",
