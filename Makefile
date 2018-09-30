@@ -4,7 +4,6 @@ ifeq ($(UNAME), Darwin)
 # MacOS
 BUILD_DIR = $(MAC_DIR)
 GLSLANG = deps/mac/glslangValidator
-CFLAGS = -Ideps/include
 CC = clang -g
 default: vulkan.bin
 
@@ -13,7 +12,6 @@ ifeq ($(UNAME), Linux)
 # Linux
 BUILD_DIR = $(LIN_DIR)
 GLSLANG = deps/lin/glslangValidator
-CFLAGS = -Ideps/include
 CC = clang -g
 default: vulkan
 
@@ -21,11 +19,14 @@ else
 # Windows
 BUILD_DIR = $(WIN_DIR)
 GLSLANG = deps/win/glslangValidator.exe
-CFLAGS = -Ideps/include
 CC = gcc -g
 default: vulkan.exe
 endif
 endif
+
+OBJS = log.o vulkan.o vulkan_helper.o
+CFLAGS = -Ideps/include
+VPATH = src
 
 WIN_LIBS = c:/Windows/system32/vulkan-1.dll -luser32 -lwinmm -lgdi32
 LIN_LIBS = -Ldeps/lin -lvulkan -lxcb
@@ -35,9 +36,6 @@ MAC_LIBS = -Ldeps/mac -lMoltenVK -framework CoreVideo -framework QuartzCore -rpa
 WIN_DIR = build/win
 LIN_DIR = build/lin
 MAC_DIR = build/mac
-
-OBJS = log.o vulkan.o vulkan_helper.o
-VPATH = src
 
 _WIN_OBJS = win32.o $(OBJS)
 _LIN_OBJS = linux_xcb.o $(OBJS)
