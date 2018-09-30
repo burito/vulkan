@@ -30,8 +30,6 @@ static long timeGetTime( void ) // Thanks Inigo Quilez!
 }
 
 
-
-
 //
 // NSView
 //
@@ -61,8 +59,6 @@ static CVReturn DisplayLinkCallback(CVDisplayLinkRef displayLink,
 	return kCVReturnSuccess;
 }
 
-
-
 -(void) dealloc
 {
 	log_debug("View:dealloc");
@@ -70,7 +66,6 @@ static CVReturn DisplayLinkCallback(CVDisplayLinkRef displayLink,
 	CVDisplayLinkRelease(_displayLink);
 	[super dealloc];
 }
-
 
 -(BOOL) wantsUpdateLayer { return YES; }
 
@@ -85,9 +80,6 @@ static CVReturn DisplayLinkCallback(CVDisplayLinkRef displayLink,
 	return layer;
 }
 @end
-
-
-
 
 
 //
@@ -209,64 +201,11 @@ int main(int argc, const char * argv[])
 
 		// opengl draw commands
 	}
-	log_warning("view layer = %p", [window_view layer]);
 
 	[pool drain];
 	log_debug("quit successfully");
-//	[myapp run];
-//	[myapp setDelegate:nil];
 	return 0;
-//	return NSApplicationMain(argc, argv);
 }
 
 
-#ifdef DONT_USE
 
-- (void)applicationWillFinishLaunching:(NSNotification *)aNotification
-{
-	log_debug("AppDelegate:applicationWillFinishLaunching");
-	// Create the menu that goes on the Apple Bar
-	NSMenu * mainMenu = [[NSMenu alloc] initWithTitle:@"MainMenu"];
-	NSMenuItem * menuTitle;
-	NSMenu * aMenu;
-
-	menuTitle = [mainMenu addItemWithTitle:@"Apple" action:NULL keyEquivalent:@""];
-	aMenu = [[NSMenu alloc] initWithTitle:@"Apple"];
-	[NSApp performSelector:@selector(setAppleMenu:) withObject:aMenu];
-
-	// generate contents of menu
-	NSMenuItem * menuItem;
-	NSString * applicationName = @"tiny";
-	menuItem = [aMenu addItemWithTitle:[NSString stringWithFormat:@"%@ %@", NSLocalizedString(@"About", nil), applicationName]
-				    action:@selector(orderFrontStandardAboutPanel:)
-			     keyEquivalent:@""];
-	[menuItem setTarget:NSApp];
-	[aMenu addItem:[NSMenuItem separatorItem]];
-
-	menuItem = [aMenu addItemWithTitle:NSLocalizedString(@"Fullscreen", nil)
-				    action:@selector(toggleFullScreen:)
-			     keyEquivalent:@"f"];
-	[menuItem setKeyEquivalentModifierMask:NSEventModifierFlagCommand | NSEventModifierFlagControl];
-	menuItem.target = nil;
-
-	[aMenu addItem:[NSMenuItem separatorItem]];
-
-	menuItem = [aMenu addItemWithTitle:[NSString stringWithFormat:@"%@ %@", NSLocalizedString(@"Quit", nil), applicationName]
-				    action:@selector(terminate:)
-			     keyEquivalent:@"q"];
-	[menuItem setTarget:NSApp];
-
-	// attach generated menu to menuitem
-	[mainMenu setSubmenu:aMenu forItem:menuTitle];
-	[NSApp setMainMenu:mainMenu];
-
-	// Because this is where you do it?
-	log_debug("added menu ok");
-	pView = [[MyView alloc] init];
-
-
-	[window setContentView:pView];
-	log_debug("set content view");
-
-}
-#endif
