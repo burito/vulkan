@@ -47,15 +47,15 @@ Then grab them from that directory.
 
 Credits
 =======
-* lib/include/vulkan/* - Khronos Group
+* deps/include/vulkan/* - Khronos Group
 	* https://github.com/KhronosGroup/Vulkan-Headers
 	* 2fd5a24ec4a6df303b2155b3f85b6b8c1d56f6c0
-* lib/include/MoltenVK/* - Khronos Group
+* deps/include/MoltenVK/* - Khronos Group
 	* https://github.com/KhronosGroup/MoltenVK/
 	* 4c5f7b8b0deeb11b8f72d1af6ffef882305170c3
-* lib/win/* - LunarG Vulkan SDK for Windows
+* deps/win/* - LunarG Vulkan SDK for Windows
 	* 1.1.82.1
-* lib/lin/* - LunarG Vulkan SDK for Linux
+* deps/lin/* - LunarG Vulkan SDK for Linux
 	* 1.1.82.1
 * src/macos.m
 	* based on the work of Dmytro Ivanov
