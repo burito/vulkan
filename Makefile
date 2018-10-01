@@ -25,7 +25,7 @@ endif
 endif
 
 OBJS = log.o vulkan.o vulkan_helper.o
-CFLAGS = -Ideps/include
+CFLAGS = -Ideps/include -Ibuild
 VPATH = src
 
 WIN_LIBS = c:/Windows/system32/vulkan-1.dll -luser32 -lwinmm -lgdi32
@@ -45,8 +45,7 @@ WIN_OBJS = $(patsubst %,$(WIN_DIR)/%,$(_WIN_OBJS))
 LIN_OBJS = $(patsubst %,$(LIN_DIR)/%,$(_LIN_OBJS))
 MAC_OBJS = $(patsubst %,$(MAC_DIR)/%,$(_MAC_OBJS))
 
-
-CFLAGS += -Ibuild
+MAC_BUNDLE = vulkan
 
 $(WIN_DIR)/%.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
@@ -75,13 +74,8 @@ vulkan.bin: $(MAC_OBJS) libMoltenVK.dylib
 
 $(BUILD_DIR)/vulkan.o: vulkan.c build/vert_spv.h build/frag_spv.h
 
-vulkan.app: vulkan.bin
-	rm -rf $@
-	mkdir -p $@/Contents
-	cp Info.plist $@/Contents
-	mkdir $@/Contents/MacOS
-	cp $< $@/Contents/MacOS/vulkan	
 
+# build the shaders - nasty hack
 build/frag.spv : shader.frag
 	$(GLSLANG) -V -H $< -o $@ > build/frag_spv.h.txt
 
@@ -93,6 +87,30 @@ build/vert_spv.h : build/vert.spv
 
 build/frag_spv.h : build/frag.spv
 	xxd -i $< > $@
+
+
+
+# generate the Apple Icon file from src/Icon.png
+$(MAC_DIR)/AppIcon.iconset:
+	mkdir $@
+$(MAC_DIR)/AppIcon.iconset/icon_512x512@2x.png: Icon.png $(MAC_DIR)/AppIcon.iconset
+	cp $< $@
+$(MAC_DIR)/AppIcon.iconset/icon_512x512.png: Icon.png $(MAC_DIR)/AppIcon.iconset
+	sips -Z 512 $< --out $@
+$(MAC_DIR)/AppIcon.icns: $(MAC_DIR)/AppIcon.iconset/icon_512x512@2x.png $(MAC_DIR)/AppIcon.iconset/icon_512x512.png
+	iconutil -c icns $(MAC_DIR)/AppIcon.iconset
+# start build the App Bundle (apple)
+$(MAC_BUNDLE).app: vulkan.bin $(MAC_DIR)/AppIcon.icns
+	rm -rf $@
+	mkdir -p $@/Contents/MacOS $@/Contents/Frameworks $@/Contents/Resources
+	cp $< $@/Contents/MacOS/$(MAC_BUNDLE)
+	cp src/Info.plist $@/Contents
+	cp deps/mac/libMoltenVK.dylib $@/Contents/Frameworks
+	install_name_tool -change libMoltenVK.dylib @loader_path/../Frameworks/libMoltenVK.dylib $@/Contents/MacOS/$(MAC_BUNDLE)
+	install_name_tool -add_rpath "@loader_path/../Frameworks" $@/Contents/MacOS/$(MAC_BUNDLE)
+	cp $(MAC_DIR)/AppIcon.icns $@/Contents/Resources
+	codesign --force --deep --sign - $@
+# end build the App Bundle
 
 clean:
 	@rm -rf build vulkan vulkan.exe vulkan.bin vulkan.app libMoltenVK.dylib 

@@ -174,7 +174,6 @@ int main(int argc, const char * argv[])
 
 	NSView *view = [[View alloc] init];
 	[window setContentView:view];
-	log_info("we are here");
 	view.wantsLayer = YES;
 	pView = [view layer];
 
