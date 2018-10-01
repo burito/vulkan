@@ -90,6 +90,7 @@ build/frag_spv.h : build/frag.spv
 
 
 
+# start build the App Bundle (apple)
 # generate the Apple Icon file from src/Icon.png
 $(MAC_DIR)/AppIcon.iconset:
 	mkdir $@
@@ -99,17 +100,39 @@ $(MAC_DIR)/AppIcon.iconset/icon_512x512.png: Icon.png $(MAC_DIR)/AppIcon.iconset
 	sips -Z 512 $< --out $@
 $(MAC_DIR)/AppIcon.icns: $(MAC_DIR)/AppIcon.iconset/icon_512x512@2x.png $(MAC_DIR)/AppIcon.iconset/icon_512x512.png
 	iconutil -c icns $(MAC_DIR)/AppIcon.iconset
-# start build the App Bundle (apple)
-$(MAC_BUNDLE).app: vulkan.bin $(MAC_DIR)/AppIcon.icns
-	rm -rf $@
-	mkdir -p $@/Contents/MacOS $@/Contents/Frameworks $@/Contents/Resources
-	cp $< $@/Contents/MacOS/$(MAC_BUNDLE)
-	cp src/Info.plist $@/Contents
-	cp deps/mac/libMoltenVK.dylib $@/Contents/Frameworks
-	install_name_tool -change libMoltenVK.dylib @loader_path/../Frameworks/libMoltenVK.dylib $@/Contents/MacOS/$(MAC_BUNDLE)
-	install_name_tool -add_rpath "@loader_path/../Frameworks" $@/Contents/MacOS/$(MAC_BUNDLE)
-	cp $(MAC_DIR)/AppIcon.icns $@/Contents/Resources
-	codesign --force --deep --sign - $@
+
+MAC_CONTENTS = $(MAC_BUNDLE).app/Contents
+
+.PHONY: $(MAC_BUNDLE).app
+$(MAC_BUNDLE).app : $(MAC_CONTENTS)/_CodeSignature/CodeResources
+
+$(MAC_CONTENTS)/_CodeSignature/CodeResources : \
+	$(MAC_CONTENTS)/MacOS/$(MAC_BUNDLE) \
+	$(MAC_CONTENTS)/Resources/AppIcon.icns \
+	$(MAC_CONTENTS)/Frameworks/libMoltenVK.dylib \
+	$(MAC_CONTENTS)/Info.plist
+	codesign --force --deep --sign - $(MAC_BUNDLE).app
+
+$(MAC_CONTENTS)/Info.plist: src/Info.plist
+	mkdir -p $(MAC_CONTENTS)
+	cp $< $@
+
+$(MAC_CONTENTS)/Resources/AppIcon.icns: $(MAC_DIR)/AppIcon.icns
+	mkdir -p $(MAC_CONTENTS)/Resources
+	cp $< $@
+
+$(MAC_CONTENTS)/Frameworks/libMoltenVK.dylib: deps/mac/libMoltenVK.dylib
+	mkdir -p $(MAC_CONTENTS)/Frameworks
+	cp $< $@
+
+$(MAC_CONTENTS)/MacOS/$(MAC_BUNDLE): $(MAC_BUNDLE).bin
+	cp $< $(MAC_DIR)/$(MAC_BUNDLE)
+	install_name_tool -change libMoltenVK.dylib @loader_path/../Frameworks/libMoltenVK.dylib $(MAC_DIR)/$(MAC_BUNDLE)
+	install_name_tool -add_rpath "@loader_path/../Frameworks" $(MAC_DIR)/$(MAC_BUNDLE)
+	mkdir -p $(MAC_CONTENTS)/MacOS
+	cp $(MAC_DIR)/$(MAC_BUNDLE) $@
+
+
 # end build the App Bundle
 
 clean:
