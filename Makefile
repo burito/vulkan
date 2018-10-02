@@ -5,7 +5,7 @@ ifeq ($(UNAME), Darwin)
 BUILD_DIR = $(MAC_DIR)
 GLSLANG = deps/mac/glslangValidator
 CC = clang -g
-default: vulkan.bin
+default: vulkan.app
 
 else
 ifeq ($(UNAME), Linux)
@@ -97,7 +97,7 @@ $(MAC_DIR)/AppIcon.iconset:
 $(MAC_DIR)/AppIcon.iconset/icon_512x512@2x.png: Icon.png $(MAC_DIR)/AppIcon.iconset
 	cp $< $@
 $(MAC_DIR)/AppIcon.iconset/icon_512x512.png: Icon.png $(MAC_DIR)/AppIcon.iconset
-	sips -Z 512 $< --out $@
+	sips -Z 512 $< --out $@ 1>/dev/null
 $(MAC_DIR)/AppIcon.icns: $(MAC_DIR)/AppIcon.iconset/icon_512x512@2x.png $(MAC_DIR)/AppIcon.iconset/icon_512x512.png
 	iconutil -c icns $(MAC_DIR)/AppIcon.iconset
 
@@ -106,6 +106,7 @@ MAC_CONTENTS = $(MAC_BUNDLE).app/Contents
 .PHONY: $(MAC_BUNDLE).app
 $(MAC_BUNDLE).app : $(MAC_CONTENTS)/_CodeSignature/CodeResources
 
+# this has to list everything inside the app bundle
 $(MAC_CONTENTS)/_CodeSignature/CodeResources : \
 	$(MAC_CONTENTS)/MacOS/$(MAC_BUNDLE) \
 	$(MAC_CONTENTS)/Resources/AppIcon.icns \
@@ -114,25 +115,25 @@ $(MAC_CONTENTS)/_CodeSignature/CodeResources : \
 	codesign --force --deep --sign - $(MAC_BUNDLE).app
 
 $(MAC_CONTENTS)/Info.plist: src/Info.plist
-	mkdir -p $(MAC_CONTENTS)
+	@mkdir -p $(MAC_CONTENTS)
 	cp $< $@
 
 $(MAC_CONTENTS)/Resources/AppIcon.icns: $(MAC_DIR)/AppIcon.icns
-	mkdir -p $(MAC_CONTENTS)/Resources
+	@mkdir -p $(MAC_CONTENTS)/Resources
 	cp $< $@
 
 $(MAC_CONTENTS)/Frameworks/libMoltenVK.dylib: deps/mac/libMoltenVK.dylib
-	mkdir -p $(MAC_CONTENTS)/Frameworks
+	@mkdir -p $(MAC_CONTENTS)/Frameworks
 	cp $< $@
 
+# copies the binary, and tells it where to find libraries
 $(MAC_CONTENTS)/MacOS/$(MAC_BUNDLE): $(MAC_BUNDLE).bin
-	cp $< $(MAC_DIR)/$(MAC_BUNDLE)
-	install_name_tool -change libMoltenVK.dylib @loader_path/../Frameworks/libMoltenVK.dylib $(MAC_DIR)/$(MAC_BUNDLE)
-	install_name_tool -add_rpath "@loader_path/../Frameworks" $(MAC_DIR)/$(MAC_BUNDLE)
-	mkdir -p $(MAC_CONTENTS)/MacOS
-	cp $(MAC_DIR)/$(MAC_BUNDLE) $@
+	@mkdir -p $(MAC_CONTENTS)/MacOS
+	cp $< $@
+	install_name_tool -change libMoltenVK.dylib @loader_path/../Frameworks/libMoltenVK.dylib $@
+	install_name_tool -add_rpath "@loader_path/../Frameworks" $@
 
-
+.DELETE_ON_ERROR :
 # end build the App Bundle
 
 clean:
