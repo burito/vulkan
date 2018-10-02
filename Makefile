@@ -8,6 +8,22 @@ CC = clang -g
 default: vulkan.app
 
 else
+# Windows & Linux need ImageMagick, lets check for it
+ifeq (magick,$(findstring magick, $(shell which magick 2>&1))) # current ImageMagick looks like this
+MAGICK = magick convert
+else
+	ifeq (convert,$(findstring convert, $(shell which convert 2>&1))) # Ubuntu ships a very old ImageMagick that looks like this
+MAGICK = convert
+	else
+$(error Can't find ImageMagick installation, try...)
+		ifeq ($(UNAME), Linux)
+			$(error		apt-get install imagemagick)
+		else
+			$(error		https://www.imagemagick.org/script/download.php)
+		endif
+	endif
+endif # ImageMagick check done!
+
 ifeq ($(UNAME), Linux)
 # Linux
 BUILD_DIR = $(LIN_DIR)
@@ -19,6 +35,7 @@ else
 # Windows
 BUILD_DIR = $(WIN_DIR)
 GLSLANG = deps/win/glslangValidator.exe
+WINDRES = windres
 CC = gcc -g
 default: vulkan.exe
 endif
@@ -37,7 +54,7 @@ WIN_DIR = build/win
 LIN_DIR = build/lin
 MAC_DIR = build/mac
 
-_WIN_OBJS = win32.o $(OBJS)
+_WIN_OBJS = win32.o win32.res $(OBJS)
 _LIN_OBJS = linux_xcb.o $(OBJS)
 _MAC_OBJS = macos.o $(OBJS)
 
@@ -88,7 +105,12 @@ build/vert_spv.h : build/vert.spv
 build/frag_spv.h : build/frag.spv
 	xxd -i $< > $@
 
-
+# start build the win32 Resource File (contains the icon)
+$(WIN_DIR)/Icon.ico: Icon.png
+	$(MAGICK) -resize 256x256 $< $@
+$(WIN_DIR)/win32.res: win32.rc $(WIN_DIR)/Icon.ico
+	$(WINDRES) -I $(WIN_DIR) -O coff $< -o $@
+# end build the win32 Resource File
 
 # start build the App Bundle (apple)
 # generate the Apple Icon file from src/Icon.png
@@ -139,4 +161,5 @@ $(MAC_CONTENTS)/MacOS/$(MAC_BUNDLE): $(MAC_BUNDLE).bin
 clean:
 	@rm -rf build vulkan vulkan.exe vulkan.bin vulkan.app libMoltenVK.dylib 
 
+# create the build directory
 $(shell	mkdir -p $(BUILD_DIR))
