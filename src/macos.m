@@ -2,33 +2,74 @@
 #import <AppKit/AppKit.h>
 #import <QuartzCore/CAMetalLayer.h>
 
+#include <sys/time.h>
+
 #include <MoltenVK/mvk_vulkan.h>
 
 #include "log.h"
 
+///////////////////////////////////////////////////////////////////////////////
+//////// Public Interface to the rest of the program
+///////////////////////////////////////////////////////////////////////////////
+
+#include "keyboard.h"
+
+int killme=0;
+int sys_width  = 1980;	/* dimensions of default screen */
+int sys_height = 1200;
+float sys_dpi = 1.0;
+int vid_width  = 1280;	/* dimensions of our part of the screen */
+int vid_height = 720;
+int mouse_x = 0;
+int mouse_y = 0;
+int mickey_x = 0;
+int mickey_y = 0;
+char mouse[] = {0,0,0,0,0,0,0,0};
+// the Logitech drivers are happy to send up to 8 numbered "mouse" buttons
+// http://www.logitech.com/pub/techsupport/mouse/mac/lcc3.9.1.b20.zip
+
+#define KEYMAX 512
+char keys[KEYMAX];
+
+int fullscreen = 0;
+int fullscreen_toggle = 0;
+
+const int sys_ticksecond = 1000000;
+long long sys_time(void)
+{
+	struct timeval tv;
+	tv.tv_usec = 0;	// tv.tv_sec = 0;
+	gettimeofday(&tv, NULL);
+	return tv.tv_usec + tv.tv_sec * sys_ticksecond;
+}
+
+void shell_browser(char *url)
+{
+	NSURL *MyNSURL = [NSURL URLWithString:[NSString stringWithUTF8String:url]];
+	[[NSWorkspace sharedWorkspace] openURL:MyNSURL];
+}
+
+
+static int y_correction = 0;  // to correct mouse position for title bar
+
+///////////////////////////////////////////////////////////////////////////////
+//////// Stuff for this program
+///////////////////////////////////////////////////////////////////////////////
+
+
+
 int vulkan_init(void);
 int vulkan_loop(float time);
 
-int killme = 0;
+
 long start_time = 0;
 static CVDisplayLinkRef _displayLink;
 
 NSWindow *window;
 void * pView = NULL;
 NSView * window_view = NULL;
-#define VIDX 1280
-#define VIDY 800
 
 int we_have_vulkan = 0;
-
-#include <sys/time.h>
-static long timeGetTime( void ) // Thanks Inigo Quilez!
-{
-	struct timeval now, res;
-	gettimeofday(&now, 0);
-	return (long)((now.tv_sec*1000) + (now.tv_usec/1000));
-}
-
 
 //
 // NSView
@@ -55,7 +96,7 @@ static CVReturn DisplayLinkCallback(CVDisplayLinkRef displayLink,
 					void *target)
 {
 //	log_debug("View:DisplayLinkCallback");
-	vulkan_loop( (timeGetTime() - start_time) * 0.001 );
+	vulkan_loop( (sys_time() - start_time) * 0.001 );
 	return kCVReturnSuccess;
 }
 
@@ -105,7 +146,7 @@ static CVReturn DisplayLinkCallback(CVDisplayLinkRef displayLink,
 {
 	log_debug("AppDelegate:applicationDidFinishLaunching");
 	// init
-	start_time = timeGetTime();
+	start_time = sys_time();
 	CVDisplayLinkStart(_displayLink);
 	log_debug("no really, we did finish launching");
 }
@@ -130,6 +171,77 @@ static CVReturn DisplayLinkCallback(CVDisplayLinkRef displayLink,
 }
 @end
 
+static void mouse_move(NSEvent * theEvent)
+{
+	mouse_x = theEvent.locationInWindow.x * sys_dpi;
+	mouse_y = vid_height-(theEvent.locationInWindow.y + y_correction) * sys_dpi;
+	mickey_x -= theEvent.deltaX * sys_dpi;
+	mickey_y -= theEvent.deltaY * sys_dpi;
+}
+
+static int event_handler(NSEvent *event)
+{
+	int bit = 0;
+	switch(event.type) {
+	case NSEventTypeKeyDown:
+		bit = 1;
+	case NSEventTypeKeyUp:
+		if( event.keyCode >= KEYMAX )
+		{
+			log_warning("unexpected key value = %d", event.keyCode);
+			return 1;
+		}
+		keys[event.keyCode] = bit;
+		break;
+	
+	case NSEventTypeLeftMouseDown:
+		bit = 1;
+	case NSEventTypeLeftMouseUp:
+		mouse[0] = bit;
+		break;
+	case NSEventTypeRightMouseDown:
+		bit = 1;
+	case NSEventTypeRightMouseUp:
+		mouse[1] = bit;
+		break;
+	case NSEventTypeOtherMouseDown:
+		bit = 1;
+	case NSEventTypeOtherMouseUp:
+		switch(event.buttonNumber) {
+		case 2: mouse[2] = bit; break;
+		case 3: mouse[3] = bit; break;
+		case 4: mouse[4] = bit; break;
+		case 5: mouse[5] = bit; break;
+		case 6: mouse[6] = bit; break;
+		case 7: mouse[7] = bit; break;
+		default:
+			log_warning("Unexpected Mouse Button %d", event.buttonNumber);
+			break;
+		}
+		mouse_move(event);
+		break;
+	case NSEventTypeMouseMoved:
+	case NSEventTypeLeftMouseDragged:
+	case NSEventTypeRightMouseDragged:
+	case NSEventTypeOtherMouseDragged:
+		mouse_move(event);
+		break;
+
+	case NSEventTypeScrollWheel:
+		break;
+
+	case NSEventTypeMouseEntered:
+	case NSEventTypeMouseExited:
+		mouse[0] = 0;
+		break;
+
+	default:
+		return 1;
+	}
+	return 0;
+}
+
+
 int main(int argc, const char * argv[])
 {
 	log_init();
@@ -150,11 +262,14 @@ int main(int argc, const char * argv[])
 	id appName = [[NSProcessInfo processInfo] processName];
 	id quitTitle = [@"Quit " stringByAppendingString:appName];
 	id quitMenuItem = [[NSMenuItem alloc] initWithTitle:quitTitle action:@selector(terminate:) keyEquivalent:@"q"];
+	id fullscreenTitle = NSLocalizedString(@"Fullscreen", nil);
+	[appMenu addItemWithTitle:fullscreenTitle action:@selector(toggleFullScreen:) keyEquivalent:@"f"];
 	[appMenu addItem:quitMenuItem];
 	[appMenuItem setSubmenu:appMenu];
 
 
-	id window = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, VIDX*0.5, VIDY*0.5)
+	id window = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0,
+			vid_width*sys_dpi, vid_height*sys_dpi)
 		styleMask: NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable | NSWindowStyleMaskResizable backing:NSBackingStoreBuffered defer:NO];
 	[window setReleasedWhenClosed:NO];
 	WindowDelegate * wdg = [[WindowDelegate alloc] init];
@@ -184,19 +299,15 @@ int main(int argc, const char * argv[])
 	while(!killme)
 	{
 		NSEvent * event = [NSApp nextEventMatchingMask:NSEventMaskAny untilDate:[NSDate distantPast] inMode:NSDefaultRunLoopMode dequeue:YES];
-		if(event)
+		if(event) 
 		{
-			NSEventType eventType = [event type];
-			switch(eventType) {
-			case NSEventTypeKeyDown:
-				killme = 1;
-				break;
-			default:
-				break;
-			}
+			event_handler(event);
 			[NSApp sendEvent:event];
 			[NSApp updateWindows];
 		}
+
+		if( keys[KEY_ESCAPE] || keys[KEY_Q] )
+			killme = 1;
 
 		// opengl draw commands
 	}
