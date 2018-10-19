@@ -18,7 +18,10 @@ freely, subject to the following restrictions:
 3. This notice may not be removed or altered from any source distribution.
 */
 
+#include <string.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <sys/time.h>
 #include <xcb/xcb.h>
 
 #include "log.h"
@@ -95,7 +98,8 @@ int main(int argc, char *argv[])
 	uint32_t value_mask, value_list[32];
 	value_mask = XCB_CW_BACK_PIXEL | XCB_CW_EVENT_MASK;
 	value_list[0] = screen->black_pixel;
-	value_list[1] = XCB_EVENT_MASK_KEY_RELEASE;
+	value_list[1] = XCB_EVENT_MASK_KEY_RELEASE |
+			XCB_EVENT_MASK_KEY_PRESS;
 
 	xcb_create_window(xcb, XCB_COPY_FROM_PARENT, window, screen->root, 0, 0, vid_width, vid_height, 0,
 	XCB_WINDOW_CLASS_INPUT_OUTPUT, screen->root_visual, value_mask, value_list);
@@ -125,10 +129,24 @@ int main(int argc, char *argv[])
 		xcb_generic_event_t *event = xcb_poll_for_event(xcb);
 		while(event)
 		{
+			int bit = 0;
 			switch ( event->response_type & 0x7f) {
-			case XCB_KEY_RELEASE:
-				log_debug("key release");
-				killme = 1;
+			case XCB_KEY_PRESS:	{
+				xcb_key_press_event_t *x = (xcb_key_press_event_t*)event;
+				if( x->detail >= KEYMAX) {
+					log_fatal("unexpected key press = %d", x->detail);
+					break;
+				}
+				keys[x->detail] = 1; }
+				break;
+				
+			case XCB_KEY_RELEASE: {
+				xcb_key_release_event_t *x = (xcb_key_release_event_t*)event;
+				if( x->detail >= KEYMAX) {
+					log_fatal("unexpected key release = %d", x->detail);
+					break;
+				}
+				keys[x->detail] = 0; }
 				break;
 			case XCB_DESTROY_NOTIFY:
 			case XCB_DESTROY_WINDOW:
@@ -158,6 +176,11 @@ int main(int argc, char *argv[])
 		ret = vulkan_loop( (time_now - last_time) / (float)sys_ticksecond );
 
 		if(ret)killme = 1;
+		if(keys[KEY_ESCAPE] || keys[KEY_Q])
+		{
+			killme = 1;
+			log_info("user requested quit with keypress");
+		}
 		/* main loop ends here! */
 	}
 	xcb_disconnect(xcb);
