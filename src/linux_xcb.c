@@ -25,16 +25,50 @@ freely, subject to the following restrictions:
 int vulkan_init(void);
 int vulkan_loop(float current_time);
 
-#define VIDX 1280
-#define VIDY 800
+///////////////////////////////////////////////////////////////////////////////
+//////// Public Interface to the rest of the program
+///////////////////////////////////////////////////////////////////////////////
+#include "keyboard.h"
 
-#include <sys/time.h>
-static long timeGetTime( void ) // Thanks Inigo Quilez!
+int killme = 0;
+int sys_width  = 1980;	/* dimensions of default screen */
+int sys_height = 1200;
+int sys_dpi = 1.0;
+int vid_width  = 1280;	/* dimensions of our part of the screen */
+int vid_height = 720;
+int win_width  = 0;		/* used for switching from fullscreen back to window */
+int win_height = 0;
+int mouse_x;
+int mouse_y;
+int mickey_x;
+int mickey_y;
+char mouse[] = {0,0,0};
+#define KEYMAX 128
+char keys[KEYMAX];
+
+int fullscreen=0;
+int fullscreen_toggle=0;
+
+const int sys_ticksecond = 1000000;
+long long sys_time(void)
 {
-	struct timeval now, res;
-	gettimeofday(&now, 0);
-	return (long)((now.tv_sec*1000) + (now.tv_usec/1000));
+	struct timeval tv;
+	tv.tv_usec = 0;	// tv.tv_sec = 0;
+	gettimeofday(&tv, NULL);
+	return tv.tv_usec + tv.tv_sec * sys_ticksecond;
 }
+
+void shell_browser(char *url)
+{
+	int c=1000;
+	char buf[c];
+	memset(buf, 0, sizeof(char)*c);
+	snprintf(buf, c, "sensible-browser %s &", url);
+	system(buf);
+}
+///////////////////////////////////////////////////////////////////////////////
+//////// end Public Interface
+///////////////////////////////////////////////////////////////////////////////
 
 xcb_connection_t *xcb;
 xcb_window_t window;
@@ -63,7 +97,7 @@ int main(int argc, char *argv[])
 	value_list[0] = screen->black_pixel;
 	value_list[1] = XCB_EVENT_MASK_KEY_RELEASE;
 
-	xcb_create_window(xcb, XCB_COPY_FROM_PARENT, window, screen->root, 0, 0, VIDX, VIDY, 0,
+	xcb_create_window(xcb, XCB_COPY_FROM_PARENT, window, screen->root, 0, 0, vid_width, vid_height, 0,
 	XCB_WINDOW_CLASS_INPUT_OUTPUT, screen->root_visual, value_mask, value_list);
 
 
@@ -85,7 +119,7 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	long last_time = timeGetTime();
+	long long last_time = sys_time();
 	int killme = 0;
 	while(!killme) {
 		xcb_generic_event_t *event = xcb_poll_for_event(xcb);
@@ -120,8 +154,8 @@ int main(int argc, char *argv[])
 		/* main loop is here! */
 
 		int ret = 0;
-		long time_now = timeGetTime();
-		ret = vulkan_loop( (time_now - last_time) * 0.001 );
+		long long time_now = sys_time();
+		ret = vulkan_loop( (time_now - last_time) / (float)sys_ticksecond );
 
 		if(ret)killme = 1;
 		/* main loop ends here! */
