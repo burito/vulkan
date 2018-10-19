@@ -17,7 +17,7 @@
 int killme=0;
 int sys_width  = 1980;	/* dimensions of default screen */
 int sys_height = 1200;
-float sys_dpi = 1.0;
+float sys_dpi = 0.5;
 int vid_width  = 1280;	/* dimensions of our part of the screen */
 int vid_height = 720;
 int mouse_x = 0;
@@ -96,7 +96,7 @@ static CVReturn DisplayLinkCallback(CVDisplayLinkRef displayLink,
 					void *target)
 {
 //	log_debug("View:DisplayLinkCallback");
-	vulkan_loop( (sys_time() - start_time) * 0.001 );
+	vulkan_loop( (sys_time() - start_time) / (float)sys_ticksecond );
 	return kCVReturnSuccess;
 }
 
