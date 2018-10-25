@@ -134,14 +134,13 @@ int vulkan_init(void)
 	}
 
 	int desired_device = 0;
-/*
+
 	for(int i=0; i<device_count; i++)
 	{
-
+		VkPhysicalDeviceProperties device_properties;
+		vkGetPhysicalDeviceProperties(vkpd[i], &device_properties);
+		log_info("device[%d] = \"%s\"", i, device_properties.deviceName);
 	}
-*/
-
-//	vkGetPhysicalDeviceSurfaceSupportKHR(vkpd, )
 
 	uint32_t queuefamily_count = 0;
 	vkGetPhysicalDeviceQueueFamilyProperties(vkpd[desired_device], &queuefamily_count, NULL);
