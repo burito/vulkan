@@ -21,8 +21,6 @@ freely, subject to the following restrictions:
 // we don't want XLIB, XCB works better
 // #define USE_LINUX_XLIB
 
-#include <inttypes.h>
-
 #ifdef _WIN32
 
 #define VK_USE_PLATFORM_WIN32_KHR
@@ -147,10 +145,11 @@ int vulkan_init(void)
 		VkPhysicalDeviceMemoryProperties pd_mem;
 		vkGetPhysicalDeviceMemoryProperties(vkpd[i], &pd_mem);
 		for(int j=0; j<pd_mem.memoryHeapCount; j++)
-			log_info("device[%d] = heap %d/%d = %" PRIu64 ", %s",
-				i, j, pd_mem.memoryHeapCount, pd_mem.memoryHeaps[j].size,
+			log_info("device[%d] = heap %d/%d = %dMb, %d:%s",
+				i, j+1, pd_mem.memoryHeapCount,
+				pd_mem.memoryHeaps[j].size / (1024*1024),
+				pd_mem.memoryHeaps[j].flags,
 				vulkan_memoryheapflags(pd_mem.memoryHeaps[j].flags));
-
 
 	}
 

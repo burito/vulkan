@@ -638,12 +638,16 @@ char* vulkan_memoryheapflags(VkMemoryHeapFlagBits flags)
 {
 	int iflags = flags;
 	switch(iflags) {
+	case 0:
+		return "No flags";
 	case 1:
 		return "VK_MEMORY_HEAP_DEVICE_LOCAL_BIT";
 	case 2:
 		return "VK_MEMORY_HEAP_MULTI_INSTANCE_BIT";
 	case 3:
 		return "VK_MEMORY_HEAP_DEVICE_LOCAL_BIT & VK_MEMORY_HEAP_MULTI_INSTANCE_BIT";
+	case 0x7FFFFFFF:
+		return "VK_MEMORY_HEAP_FLAG_BITS_MAX_ENUM";
 	default:
 		return NULL;
 	}
