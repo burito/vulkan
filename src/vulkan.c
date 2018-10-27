@@ -428,19 +428,25 @@ int vulkan_init(void)
 		result = vkCreateImageView( device, &image_view_crinf, NULL, &img_view[i]);
 		if( result != VK_SUCCESS )
 		{
-			log_warning("vkCreateImageView(%d) = %d", i+1, result);
+			log_warning("vkCreateImageView(%d) = %s", i+1, vulkan_result(result));
 		}
 
 		VkFramebufferCreateInfo fb_crinf = {
-			VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
-			NULL,
-			0,
-			vkrp, 1, &img_view[i], vid_width, vid_height, 1};
+			VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,	// VkStructureType             sType;
+			NULL,						// const void*                 pNext;
+			0,						// VkFramebufferCreateFlags    flags;
+			vkrp,						// VkRenderPass                renderPass;
+			1,						// uint32_t                    attachmentCount;
+			&img_view[i],					// const VkImageView*          pAttachments;
+			vid_width,					// uint32_t                    width;
+			vid_height,					// uint32_t                    height;
+			1						// uint32_t                    layers;
+		};
 
 		result = vkCreateFramebuffer( device, &fb_crinf, NULL, &vkfb[i]);
 		if( result != VK_SUCCESS )
 		{
-			log_warning("vkCreateFramebuffer(%d) = %d", i+1, result);
+			log_warning("vkCreateFramebuffer(%d) = %s", i+1, vulkan_result(result));
 		}
 	}
 
