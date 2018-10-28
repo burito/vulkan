@@ -94,8 +94,23 @@ static uint32_t display_buffer_count;
 static VkQueue queue;
 static VkDeviceMemory ubo_client;
 static VkCommandBuffer command_buffers[2];
+static VkPhysicalDeviceMemoryProperties device_mem_props;
+static VkPhysicalDeviceProperties device_properties;
 
-
+int find_memory_type(VkMemoryRequirements requirements, VkMemoryPropertyFlags wanted)
+{
+	for(int i=0; i<device_mem_props.memoryTypeCount; i++)
+	{
+		if( requirements.memoryTypeBits & (1<<i) )
+		if( (device_mem_props.memoryTypes[i].propertyFlags & wanted) == wanted )
+		{
+			// found the memory number we wanted
+			return i;
+		}
+	}
+	log_warning("could not find the desired memory type");
+	return 0;
+}
 
 
 int vulkan_init(void)
@@ -125,7 +140,7 @@ int vulkan_init(void)
 	{
 		log_warning("vkEnumeratePhysicalDevices1 = %s", vulkan_result(result));
 	}
-	log_info("vkEnumeratePhysicalDevices = %d", device_count);
+
 	VkPhysicalDevice *vkpd;
 	vkpd = malloc(sizeof(VkPhysicalDevice) * device_count);
 	result = vkEnumeratePhysicalDevices(vki, &device_count, vkpd);
@@ -135,24 +150,38 @@ int vulkan_init(void)
 	}
 
 	int desired_device = 0;
+	int desired_device_vram = 0;
 
 	for(int i=0; i<device_count; i++)
 	{
-		VkPhysicalDeviceProperties device_properties;
 		vkGetPhysicalDeviceProperties(vkpd[i], &device_properties);
-		char * dev_type = vulkan_physicaldevicetype(device_properties.deviceType);
-		log_info("device[%d] = \"%s\" - %s", i, device_properties.deviceName,
-				vulkan_physicaldevicetype(device_properties.deviceType));
 		VkPhysicalDeviceMemoryProperties pd_mem;
 		vkGetPhysicalDeviceMemoryProperties(vkpd[i], &pd_mem);
-		for(int j=0; j<pd_mem.memoryHeapCount; j++)
-			log_info("device[%d] = heap %d/%d = %dMb, %d:%s",
-				i, j+1, pd_mem.memoryHeapCount,
-				pd_mem.memoryHeaps[j].size / (1024*1024),
-				pd_mem.memoryHeaps[j].flags,
-				vulkan_memoryheapflags(pd_mem.memoryHeaps[j].flags));
 
+		if( device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU )
+		{
+			// might be a good device, let's check VRAM amount
+			for(int j=0; j<pd_mem.memoryHeapCount; j++)
+			if( pd_mem.memoryHeaps[j].flags & VK_MEMORY_HEAP_DEVICE_LOCAL_BIT)
+			{
+				int vram = (pd_mem.memoryHeaps[j].size / (1024*1024));
+				if( desired_device_vram < vram )
+				{
+					// it has more VRAM than the last device we checked
+					desired_device_vram = vram;
+					desired_device = i;
+				}
+			}
+		}
 	}
+
+	// we just want this information, to put in a log
+	vkGetPhysicalDeviceProperties(vkpd[desired_device], &device_properties);
+	// we need this information for later.
+	vkGetPhysicalDeviceMemoryProperties(vkpd[desired_device], &device_mem_props);
+
+	log_info("GPU        : %s", device_properties.deviceName);
+	log_info("GPU VRAM   : %dMb", desired_device_vram);
 
 	uint32_t queuefamily_count = 0;
 	vkGetPhysicalDeviceQueueFamilyProperties(vkpd[desired_device], &queuefamily_count, NULL);
@@ -553,21 +582,9 @@ int vulkan_init(void)
 	}
 	int wanted = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
 	VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
-	int client_memory_type = 0;
 	VkMemoryRequirements vk_memreq;
 	vkGetBufferMemoryRequirements(device, ubo_buffer_client, &vk_memreq);
-	VkPhysicalDeviceMemoryProperties vkpdmp;
-	vkGetPhysicalDeviceMemoryProperties(vkpd[desired_device], &vkpdmp);
-	for(int i=0; i<vkpdmp.memoryTypeCount; i++)
-	{
-		if( vk_memreq.memoryTypeBits & (1<<i) )
-		if( (vkpdmp.memoryTypes[i].propertyFlags & wanted) == wanted )
-		{
-			log_debug("vkGetPhysicalDeviceMemoryProperties(client) = %d", i);
-			client_memory_type = i;
-			break;
-		}
-	}
+	int client_memory_type = find_memory_type(vk_memreq, wanted);
 
 	// create the uniform buffer
 	VkMemoryAllocateInfo ubo_buffer_client_alloc_info = {
@@ -597,17 +614,7 @@ int vulkan_init(void)
 	// for the host buffer
 	wanted = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 	vkGetBufferMemoryRequirements(device, ubo_buffer_host, &vk_memreq);
-	int host_memory_type = 0;
-	for(int i=0; i<vkpdmp.memoryTypeCount; i++)
-	{
-		if( vk_memreq.memoryTypeBits & (1<<i) )
-		if( (vkpdmp.memoryTypes[i].propertyFlags & wanted) == wanted )
-		{
-			log_debug("vkGetPhysicalDeviceMemoryProperties(host) = %d", i);
-			host_memory_type = i;
-			break;
-		}
-	}
+	int host_memory_type = find_memory_type(vk_memreq, wanted);
 
 	VkMemoryAllocateInfo ubo_buffer_host_alloc_info = {
 		VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,	// VkStructureType    sType;
